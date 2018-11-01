@@ -26,22 +26,23 @@ P = [F+G, -F,  -G,   0;
     -F,  F+H,  -H,   0;
     -G,   -H, G+H,   0;
      0,    0,   0, 2*L];
+ 
+P_hat = Lmat'*P([1 2 4], [1 2 4])*Lmat;
 
 % TRIAL STRESS
 sigma_t = Dstar*delta_eps + sigma_old;
 
 % INSERT TRIAL STRESS INTO YIELD FUNCTION
-s_t_prim = Tmatrix*Lmat*sigma_t;
-f_t = sigma_y0*(sqrt(s_t_prim'*P*s_t_prim) - (1+k*ep_eff_old^n));
+f_t = sigma_y0*(sqrt(sigma_t'*P_hat*sigma_t) - (1+k*ep_eff_old^n));
 
 function [f] = yield(dlambda)
 %YIELD Yield function value dependent on dlambda (used to find dlambda when
 % f = 0)
     sigma_y = sigma_y0*(1+k*(ep_eff_old + dlambda)^n);
-    Amatrix = eye(3)+(sigma_y0^2/(sigma_y)*Dstar*Lmat'*Tmatrix'*P*Tmatrix*Lmat*dlambda);
-    s_2 = Tmatrix*Lmat*(Amatrix\sigma_t);
+    Amatrix = eye(3)+(sigma_y0^2/(sigma_y)*Dstar*P_hat*dlambda);
+    s_2 = Amatrix\sigma_t;
 
-    f = sigma_y0^2*s_2'*P*s_2 - sigma_y^2;
+    f = sigma_y0^2*s_2'*P_hat*s_2 - sigma_y^2;
 end
 
 % USE VALUE OF YIELD FUNCTION TO DETERMINE THE RESPONSE
@@ -56,7 +57,7 @@ else
     dlambda = fzero(@yield, [0 10]);
     ep_eff = ep_eff_old + dlambda;
     sigma_y = sigma_y0*(1+k*(ep_eff)^n);
-    Amatrix = eye(3)+(sigma_y0^2/(sigma_y)*Dstar*Lmat'*Tmatrix'*P*Tmatrix*Lmat*dlambda);
+    Amatrix = eye(3)+(sigma_y0^2/(sigma_y)*Dstar*P_hat*dlambda);
     sigma = Amatrix\sigma_t;
     return;
 end
