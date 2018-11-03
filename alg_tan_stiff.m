@@ -1,4 +1,4 @@
-function [ Dats ] = alg_tan_stiff( sigma,dlambda,ep_eff,Dstar,mp,rotation )
+function [Dats] = alg_tan_stiff(sigma, dlambda, ep_eff, Dstar, mp, rotation )
 % Algorithmic tangential stiffness matrix
 %   Input:
 %       sigma       - Stress at a point [s_11; s_22, s_12]
@@ -39,8 +39,6 @@ da = -(sigma_y0*n*k*ep_eff^(n-1)*(-1));
 A_a = df'*D_a*df - (-1)*da;
 
 Dats = D_a - 1/A_a*D_a*df*df'*D_a;
-
-
 
 end
 
