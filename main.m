@@ -5,11 +5,28 @@ MAX_LOAD = 8e8; % [Pa]
 MAX_DISPLACEMENT = 0.2e-3; % [m]
 nbrLoadSteps = 30; % number of load steps
 
-load simple_mesh.mat
+ctrlCase = input("Skriv in lastfall (1-4):");
+control = 0; % 0 - force control, 1 - displacement control
+
+switch ctrlCase
+    case 1
+        control = 0;
+        load simple_mesh.mat;
+        theta = deg2rad(0); % [rad]
+        MAX_LOAD = 4e8; % [Pa]
+        mainDir = 2;
+    case 2
+        control = 0;
+        load simple_mesh.mat;
+        theta = deg2rad(90);
+        MAX_LOAD = 8e8;
+        mainDir = 1;
+    otherwise
+        error("Du har valt ett inkorrekt alternativ");
+end
+
 dtau_x = MAX_LOAD/nbrLoadSteps;
 du = MAX_DISPLACEMENT/nbrLoadSteps;
-theta = deg2rad(90); % [rad]
-control = 0; % 0 - force control, 1 - displacement control
 
 ptype = 1; % 1 - plane stress, 2 - plane strain
 th = 1e-3; % [m]
@@ -149,18 +166,27 @@ for loadStep = 1:(nbrLoadSteps*2)
 end
 eldisp2(Ex, Ey, elemDisplacements, [3 2 0], 1);
 
-figure
-plot(loads, displacements);
-if control == 0
-    title("Force vs. displacements in dof " + plot_dof + " (load controlled)");
-elseif control == 1
-    title("Force vs. displacements in dof " + plot_dof + " (displacement controlled)");
-end
-xlabel("Force [N] in dof");
-ylabel("Displacement [m] in dof");
-grid on
-grid minor
+if ctrlCase == 1 || ctrlCase == 2
+    figure;
+    crossArea = 1*th;
+    sigma = 2*loads / crossArea;
+    epsilon = displacements;
 
+    plot(epsilon, sigma, 'Color', 'k', 'LineWidth', 1);
+    hold on
+    plot(epsilon, sigma_y0(mainDir)*ones(size(epsilon)), 'Color', 'r');
+    if ctrlCase == 1
+        legend(["Load path", "\sigma_{y0, CD}"]);
+    else
+        legend(["Load path", "\sigma_{y0, RD}"]);
+    end
+    title("Uniaxial stress vs. strain in dof " + plot_dof + " (load controlled)");
+    xlabel("Strain \epsilon");
+    ylabel("Stress \sigma [Pa]");
+    grid on
+    grid minor
+    hold off
+end
 % stress = one row per element: [sigma_11, sigma_22, sigma_12]
 elemEffStress = sqrt(sum(stress(:, 1:2).^2, 2) - stress(:, 1).*stress(:, 2) + ...
                      3*stress(:, 3).^2);
@@ -181,4 +207,4 @@ axis equal
 grid on
 cb = colorbar;
 ylabel(cb, "\sigma_e - [Pa]")
-patch(newEx', newEy', nodeEffStress')
+patch(newEx', newEy', elemEffStress')
