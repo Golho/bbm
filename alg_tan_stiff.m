@@ -10,7 +10,6 @@ function [Dats] = alg_tan_stiff(sigma, dlambda, ep_eff, Dstar, mp, rotation )
 %   Output:
 %       Dats        - Algoritmic tangential stiffness matrix [3x3]
 
-
 F = mp(1);
 G = mp(2);
 H = mp(3);
@@ -32,7 +31,7 @@ sigma_eff = sqrt(sigma_y0^2*sigma'*P_hat*sigma);
 
 df = sigma_y0^2/sigma_eff*P_hat*sigma;
 
-D_a = inv(inv(Dstar) + dlambda*(sigma_y0^2/sigma_eff*P_hat-sigma_y0^4/sigma_eff^3*P_hat*sigma*sigma'*P_hat'));
+D_a = inv(inv(Dstar) + dlambda*(sigma_y0^2/sigma_eff*P_hat-sigma_y0^4/sigma_eff^3*P_hat*(sigma*sigma')*P_hat'));
 
 da = -(sigma_y0*n*k*ep_eff^(n-1)*(-1));
 

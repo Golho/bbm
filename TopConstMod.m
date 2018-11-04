@@ -48,11 +48,11 @@ eldraw2(ex,ey,[1 2 0])
 
 % Find the coordinates for the corners
 minx = min(coord(:,1));                   % minimum x-coord. of the geometry
-minXi = find(minx == coord(:, 1))
+minXi = find(minx == coord(:, 1));
 maxx = max(coord(:,1));                   % maximum x-coord. of the geometry
-maxXi = find(maxx == coord(:, 1))
+maxXi = find(maxx == coord(:, 1));
 miny = min(coord(:,2));                   % minimum y-coord. of the geometry
-minYi = find(miny == coord(:, 2))
+minYi = find(miny == coord(:, 2));
 maxy = max(coord(:,2));                   % maximum x-coord. of the geometry
 maxYi = find(maxy == coord(:, 2));
 
