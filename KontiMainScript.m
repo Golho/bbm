@@ -2,7 +2,7 @@
 clear all;
 clc;
 close all;
-%% Excercise 1)
+%% Exercise 1)
 
 % From curve 1 (solid line)
 v_0y = 0.06;
@@ -56,17 +56,18 @@ nu = @(y) (s2.A*exp(y*L)+s2.B*exp(-y*L)+s2.C*y+s2.D);
 fplot(nu,[0 1])
 hold off
 
-%% Excercise 2
+%% Exercise 2
 
 % Integration constant
 k = h/L*(s2.B-s2.A);
 rho_0 = 1;
 theta = 30;
 g = 9.81;
-my = 1;
+b = g*[sind(theta), cosd(theta), 0]; % [b_x, b_y, b_z]
+my = -1;
 g_y = cosd(theta)*g;
 g_x = sind(theta)*g;
-p_1 = @(y) (rho_0*g_x*(s2.A*h/L*exp(y/h*L)-s2.B*h/L*exp(-y/h*L)+s2.C*y.^2/(2*h)+s2.D*y + k));
+p_1 = @(y) (rho_0*b(2)*(s2.A*h/L*exp(y/h*L)-s2.B*h/L*exp(-y/h*L)+s2.C*y.^2/(2*h)+s2.D*y + k));
 figure(3)
 hold on
 title('Gauge pressure vs flow depth')
@@ -76,7 +77,7 @@ fplot(p_1,[0 h])
 hold off
 % Integration constant
 l = -(h/L)^2*(s2.A*exp(L)+s2.B*exp(-L)+s2.C*L^2/6+s2.D*L^2/2)-k*h;
-xdot_1 = @(x) (-g_y/my*(s2.A*(h/L)^2*exp(x/h*L)+s2.B*(h/L)^2*exp(-x/h*L)+s2.C*x.^3/(6*h)+s2.D*x.^2/2+k*x+l));
+xdot_1 = @(x) -b(1)*rho_0/my * (s2.A*(h/L)^2*exp(x/h*L)+s2.B*(h/L)^2*exp(-x/h*L)+s2.C*x.^3/(6*h)+s2.D*x.^2/2+k*x+l);
 figure(4)
 hold on
 title('Flow velocity vs flow depth')
@@ -84,26 +85,63 @@ xlabel('y [m]');
 ylabel('velocity [m/s]');
 fplot(xdot_1,[0 h])
 hold off
-%% Derivations
-% Symbolic derivations of some quantities
-syms rho_0 y h L A B C D y_star
-E = [A, B, C, D];
-nu = E*[exp(y/h*L); exp(-y/h*L); y/h; 1];
-rho = rho_0*nu;
-
-d_nu = diff(nu, y)
-D_nu = int(nu, y) + h/L*(B-A)
-
-DD_nu = int(D_nu, y)
-
-d_rho = diff(rho, y);
-drho2_dy = diff(d_rho^2, y)
-expand(drho2_dy)
-p_2 = int(drho2_dy, y, 0, y_star)
+%% Exercise 3
+A = s2.A;
+B = s2.B;
+C = s2.C;
+D = s2.D;
+mu_1 = 0.005;
+p_2 = @(y) rho_0^2*(L/h)^2*(A^2*(exp(2*L*y/h)-1) + B^2*(exp(-2*L*y/h)-1) + 2/L*A*C*(exp(L*y/h)-1) - 2/L*B*C*(exp(-L*y/h)-1));
+p_const2 = @(y) p_1(y) + mu_1*p_2(y);
+figure
+fplot(p_const2,[0 h])
+title('Gauge pressure vs flow depth')
+xlabel('y [m]');
+ylabel('p [Pa (Gauge)]');
 %% Solve differential equation
 clear h
 h = 0.3;
+options = bvpset('RelTol', 1e-5);
 solinit = bvpinit([0,h],[0,0.12]);
  
-sol = bvp4c(@dxdy_fun, @bcs, solinit);
-plot(sol.x,sol.y(1,:),'b-x');
+sol = bvp4c(@dxdy_fun, @bcs, solinit, options);
+figure
+plot(sol.x,sol.y(1,:));
+title('Flow velocity vs flow depth')
+xlabel('y [m]');
+ylabel('velocity [m/s]');
+
+function [dxdy] = dxdy_fun(y, X)
+%dxdu_fun Return the derivative of the flow velocity for constitutive
+%relation 2
+A = 0.0002359;
+B = -0.6355;
+C = -0.6389;
+D = 0.6953;
+
+h = 0.3;
+L = 6;
+rho_0 = 1;
+mu = -1;
+mu_2 = -1;
+theta = 30;
+g = 9.81;
+g_x = sind(theta)*g;
+
+rho = @(y) rho_0*(A*exp(y*L/h) + B*exp(-y*L/h) + C*y/h + D);
+drhody = @(y) rho_0*(L/h*A*exp(y*L/h) - L/h*B*exp(-y*L/h) + C/h);
+temp2 = @(y) 2*rho_0^2*L^2/h^3*(L*A^2*exp(2*L/h*y) + A*C*exp(L/h*y) - L*B^2*exp(-2*L/h*y) + B*C*exp(-L/h*y));
+
+f = @(y) mu + mu_2/2*drhody(y)^2;
+g = @(y) mu_2/2 * temp2(y);
+h = @(y) -rho(y)*g_x;
+dxdy(1) = X(2);
+dxdy(2) = (h(y) - g(y)*X(2))/f(y);
+end
+
+function [res] = bcs(xa,xb)
+%bcs Return the boundary conditions for the flow for constitutive relation
+% 2
+res = [xa(2);
+       xb(1)];
+end

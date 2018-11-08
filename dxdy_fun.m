@@ -1,6 +1,6 @@
 function [dxdy] = dxdy_fun(y, X)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%dxdu_fun Return the derivative of the flow velocity for constitutive
+%relation 2
 A = 0.0002359;
 B = -0.6355;
 C = -0.6389;
@@ -11,9 +11,9 @@ L = 6;
 rho_0 = 1;
 mu = -1;
 mu_2 = -1;
-theta = deg2rad(30);
+theta = 30;
 g = 9.81;
-g_x = cos(theta)*g;
+g_x = sind(theta)*g;
 
 rho = @(y) rho_0*(A*exp(y*L/h) + B*exp(-y*L/h) + C*y/h + D);
 drhody = @(y) rho_0*(L/h*A*exp(y*L/h) - L/h*B*exp(-y*L/h) + C/h);
